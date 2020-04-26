@@ -1,0 +1,15 @@
+{
+  "name": "simulation",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^13.9.1",
+    "@types/seedrandom": "^2.4.28"
+  },
+  "dependencies": {
+    "immutable": "^4.0.0-rc.12",
+    "iohook": "^0.6.5",
+    "seedrandom": "^3.0.5"
+  }
+}

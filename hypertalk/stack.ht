@@ -1,0 +1,463 @@
+
+on openCard
+  Send colorMe to this card
+  pass openCard
+end openCard
+
+on closeCard
+  global prev_card
+  get the id of this cd
+  put it into prev_card
+  lock screen
+  pass closeCard
+end closeCard
+
+on colorMe
+  AddColor colorCard,stamp,0
+end colorMe
+
+on openStack
+  AddColor install
+  setupMenu
+  go to card "tun-1-n"
+  pass openStack
+end openStack
+
+on closeStack
+  AddColor remove
+  pass closeStack
+end closeStack
+
+on genPuzzle
+  send "doMenu New Button" to Hypercard
+end genPuzzle
+
+on initCard
+  answer prev_card
+end initCard
+
+on menuReset
+  setupMenu
+  pass menuReset
+end menuReset
+
+
+on setupMenu
+  if there is not a menu "Watness" then
+    create menu "Watness"
+    put "Generate Puzzle"&return&"Init Card"&return&"Set up Nav"&return&"Create Puzzle" into menu "Watness" with menuMsg genPuzzle,initCard,setupNav,constructPuzzle
+  end if
+end setupMenu
+
+
+on setupNav
+  ask "What is the name of this card"
+  set name of this cd to it
+  
+  ask "Where should the left go?"
+  put it into left_loc
+  send "doMenu New Button" to Hypercard
+  set height of the last button to 342
+  set width of the last button to 100
+  set topleft of the last button to "0,0"
+  set style of the last button to "transparent"
+  set name of the last button to ""
+  put "on mouseUp"&return&"go to card "&quote&""&left_loc&quote&return&"end mouseUp" into left_script
+  set script of last button to left_script
+  
+  ask "Where should the right go?"
+  put it into right_loc
+  send "doMenu New Button" to Hypercard
+  set height of the last button to 342
+  set width of the last button to 100
+  set topleft of the last button to "412,0"
+  set style of the last button to "transparent"
+  set name of the last button to ""
+  put "on mouseUp"&return&"go to card "&quote&""&right_loc&quote&return&"end mouseUp" into right_script
+  set script of last button to right_script
+  
+  ask "Where should fwd go?"
+  put it into fwd_loc
+  send "doMenu New Button" to Hypercard
+  set height of the last button to 342
+  set width of the last button to 311
+  set the top of the last button to 0
+  set the left of the last button to 100
+  set style of the last button to "transparent"
+  set name of the last button to ""
+  put "on mouseUp"&return&"go to card "&quote&""&fwd_loc&quote&return&"end mouseUp" into fwd_script
+  set script of last button to fwd_script
+  
+  get the script of this card
+  put it into cd_script
+  put cd_script&return into cd_script
+  put cd_script&"on arrowKey key"&return into cd_script
+  put cd_script&" if key = "&quote&"left"&quote&"then"&return into cd_script
+  put cd_script&"  go to cd "&quote&left_loc&quote&return into cd_script
+  put cd_script&" end if"&return into cd_script
+  put cd_script&" if key = "&quote&"right"&quote&"then"&return into cd_script
+  put cd_script&"  go to cd "&quote&right_loc&quote&return into cd_script
+  put cd_script&" end if"&return into cd_script
+  put cd_script&" if key = "&quote&"up"&quote&"then"&return into cd_script
+  put cd_script&"  go to cd "&quote&fwd_loc&quote&return into cd_script
+  put cd_script&" end if"&return into cd_script
+  put cd_script&"end arrowKey"&return into cd_script
+  
+  
+  set the script of this cd to cd_script
+end setupNav
+
+
+on makeNode
+  global node
+  send "doMenu New Button" to Hypercard
+  put the id of the last button into node
+end makeNode
+
+
+on constructPuzzle
+  global node,constraints
+  
+  ask "What are the constraints"
+  put it into constraints
+  
+  get the script of this cd
+  put it into cd_script
+  put cd_script&return into cd_script
+  put cd_script&"on openCard"&return into cd_script
+  put cd_script&"  global constraints,path,cursor_x,cursor_y," into cd_script
+  
+  put 0 into i
+  repeat for 8
+    
+    put 0 into j
+    repeat for 8
+      put cd_script&"active_"&i&"_"&j&"," into cd_script
+      
+      put j+1 into j
+    end repeat
+    
+    put i+1 into i
+  end repeat
+  
+  put cd_script&"dummy"&return into cd_script
+  put cd_script&"  colorme"&return into cd_script
+  put cd_script&"  put -1 into cursor_x"&return into cd_script
+  put cd_script&"  put 0 into cursor_y"&return into cd_script
+  put cd_script&"  put "&quote&quote&" into path"&return into cd_script
+  put cd_script&"  put "&quote&constraints&quote&" into constraints"&return into cd_script
+  
+  put 1 into c_i
+  put 0 into i
+  repeat for 7
+    
+    put 0 into j
+    repeat for 7
+      get char (j*7+i+1) of constraints
+      put it into letter
+      
+      if letter <> " " then
+        makeNode
+        
+        set the width of button id node to 10
+        set the height of button id node to 10
+        
+        set the top of button id node to (76 + j * 30)
+        set the left of button id node to (161 + i * 30)
+        
+        set the style of button id node to "opaque"
+        set showName of button id node to false
+        
+        if letter = "r" then
+          put "65535,0,0" into node_color
+        end if
+        if letter = "g" then
+          put "0,65535,0" into node_color
+        end if
+        if letter = "b" then
+          put "0,0,65535" into node_color
+        end if
+        
+        if letter <> " " then
+          addColor colorButton, cd, node, node_color
+          
+          put cd_script&"  addColor colorButton, cd, "&node&", "&quote&node_color&quote&return into cd_script
+        end if
+      end if
+      
+      
+      
+      put j+1 into j
+    end repeat
+    
+    put i+1 into i
+  end repeat
+  
+  
+  
+  put 0 into i
+  repeat for 8
+    
+    put 0 into j
+    repeat for 8
+      put cd_script&"  put "&quote&quote&" into active_"&i&"_"&j&return into cd_script
+      
+      put j+1 into j
+    end repeat
+    
+    put i+1 into i
+  end repeat
+  
+  makeNode
+  
+  set the width of button id node to 10
+  set the height of button id node to 15
+  set the left of button id node to 356
+  set the top of button id node to 276
+  set the name of button id node to "path_extension"
+  set showName of button id node to false
+  set the style of button id node to opaque
+  addcolor colorButton, cd, node, "37632,30208,12288"
+  
+  put "" into node_script
+  put node_script&"on checkYoSelf"&return into node_script
+  put node_script&"  addcolor colorButton, cd, "&node&", "&quote&"65535,65535,30000"&quote&return into node_script
+  put node_script&"end checkYoSelf"&return into node_script
+  
+  set the script of button id node to node_script
+  
+  put cd_script&"  addcolor colorButton, cd, "&node&", "&quote&"37632,30208,12288"&quote&return into cd_script
+  
+  
+  makeNode
+  
+  set the width of button id node to 10
+  set the height of button id node to 10
+  set the left of button id node to 356
+  set the top of button id node to 286
+  set the name of button id node to "finale"
+  set showName of button id node to false
+  set the style of button id node to oval
+  addcolor colorButton, cd, node, "37632,30208,12288"
+  
+  put "" into node_script
+  put node_script&"on mouseUp"&return into node_script
+  put node_script&"  global cursor_x, cursor_y"&return into node_script
+  put node_script&"  if (cursor_x = 7) and (cursor_y = 7) then"&return into node_script
+  put node_script&"    addcolor colorButton, cd, "&node&", "&quote&"65535,65535,30000"&quote&return into node_script
+  put node_script&"    send "&quote&"checkYoSelf"&quote&" to button path_extension"&return into node_script
+  put node_script&"    send "&quote&"checkSolution"&quote&" to this cd"&return into node_script
+  put node_script&"  end if"&return into node_script
+  put node_script&"end mouseUp"&return into node_script
+  
+  set the script of button id node to node_script
+  
+  put cd_script&"  addcolor colorButton, cd, "&node&", "&quote&"37632,30208,12288"&quote&return into cd_script
+  
+  put 0 into i
+  repeat for 7
+    
+    put 0 into j
+    repeat for 8
+      makeNode
+      
+      set the width of button id node to 30
+      set the height of button id node to 10
+      
+      set the top of button id node to (61 + 30 * j)
+      set the left of button id node to (151 + 30 * i)
+      
+      set the style of button id node to opaque
+      set the name of button id node to "h_path_"&i&"_"&j
+      
+      set showName of button id node to false
+      
+      addcolor colorButton, cd, node, "37632,30208,12288"
+      
+      put cd_script&"  addcolor colorButton, cd, "&node&", "&quote&"37632,30208,12288"&quote&return into cd_script
+      
+      get the script of button id node
+      put it into node_script
+      
+      put "active_"&i&"_"&j into f_node
+      put "active_"&(i+1)&"_"&j into s_node
+      
+      put node_script&return into node_script
+      put node_script&"on checkYoSelf"&return into node_script
+      put node_script&"  global "&f_node&","&s_node&return into node_script
+      put node_script&"  if ("&f_node&" = true) and ("&s_node&" = true) then"&return into node_script
+      put node_script&"    addcolor colorButton, cd, "&node&", "&quote&"65535,65535,30000"&quote&return into node_script
+      put node_script&"  end if"&return into node_script
+      put node_script&"end checkYoSelf"&return into node_script
+      
+      set the script of button id node to node_script
+      
+      put j+1 into j
+    end repeat
+    
+    put i+1 into i
+  end repeat
+  
+  put 0 into i
+  repeat for 8
+    
+    put 0 into j
+    repeat for 7
+      makeNode
+      
+      set the width of button id node to 10
+      set the height of button id node to 30
+      
+      set the top of button id node to (66 + 30 * j)
+      set the left of button id node to (146 + 30 * i)
+      
+      set the style of button id node to opaque
+      set the name of button id node to "v_path_"&i&"_"&j
+      
+      set showName of button id node to false
+      
+      addcolor colorButton, cd, node, "37632,30208,12288"
+      
+      put cd_script&"  addcolor colorButton, cd, "&node&", "&quote&"37632,30208,12288"&quote&return into cd_script
+      
+      get the script of button id node
+      put it into node_script
+      
+      put "active_"&i&"_"&j into f_node
+      put "active_"&i&"_"&(j+1) into s_node
+      
+      put node_script&return into node_script
+      put node_script&"on checkYoSelf"&return into node_script
+      put node_script&"  global "&f_node&","&s_node&return into node_script
+      put node_script&"  if ("&f_node&" = true) and ("&s_node&" = true) then"&return into node_script
+      put node_script&"    addcolor colorButton, cd, "&node&", "&quote&"65535,65535,30000"&quote&return into node_script
+      put node_script&"  end if"&return into node_script
+      put node_script&"end checkYoSelf"&return into node_script
+      
+      set the script of button id node to node_script
+      
+      put j+1 into j
+    end repeat
+    
+    put i+1 into i
+  end repeat
+  
+  put 0 into i
+  repeat for 8
+    
+    put 0 into j
+    repeat for 8
+      makeNode
+      
+      set the width of button id node to 10
+      set the height of button id node to 10
+      
+      set the top of button id node to (61 + 30 * j)
+      set the left of button id node to (146 + 30 * i)
+      
+      set the style of button id node to oval
+      set the name of button id node to "button_"&i&"_"&j
+      
+      set showName of button id node to false
+      
+      addcolor colorButton, cd, node, "37632,30208,12288"
+      
+      put "active_"&i&"_"&j into v_name
+      
+      put "" into node_script
+      put node_script&"on mouseUp"&return into node_script
+      put node_script&"  global "&v_name&",cursor_x,cursor_y"&return into node_script
+      put node_script&"  put cursor_x into prev_x"&return into node_script
+      put node_script&"  put cursor_y into prev_y"&return into node_script
+      put node_script&"  put abs(cursor_x-"&i&") into dx"&return into node_script
+      put node_script&"  put abs(cursor_y-"&j&") into dy"&return into node_script
+      put node_script&"  if ("&v_name&" = "&quote&quote&") and ((dx = 1 and dy = 0) or (dx = 0 and dy = 1)) then"&return into node_script
+      put node_script&"    put true into "&v_name&return into node_script
+      put node_script&"    send "&quote&"updateState "&i&","&j&quote&" to this cd"&return into node_script
+      put node_script&"    addcolor colorButton, cd, "&node&", "&quote&"65535,65535,30000"&quote&return into node_script
+      put node_script&"  end if"&return into node_script
+      put node_script&"end mouseUp"&return into node_script
+      
+      set the script of button id node to node_script
+      
+      put cd_script&"  addcolor colorButton, cd, "&node&", "&quote&"37632,30208,12288"&quote&return into cd_script
+      
+      put j+1 into j
+    end repeat
+    
+    put i+1 into i
+  end repeat
+  
+  set the width of button button_0_0 to 30
+  set the height of button button_0_0 to 30
+  
+  set the top of button button_0_0 to 51
+  set the left of button button_0_0 to 136
+  
+  get the id of button button_0_0
+  addColor colorButton, cd, it, "37632,30208,12288"
+  
+  put cd_script&"end openCard"&return into cd_script
+  set the script of this cd to cd_script
+  
+end constructPuzzle
+
+on checkSolution
+  global puzzle_id,path,constraints,flag_1,flag_2,flag_3
+  watnesssolver constraints,path
+  put the result into success
+  if success = "true" then
+    if puzzle_id = 1 then
+      decoder path,"clrtffxpry"
+      put the result into flag_1
+    end if
+    if puzzle_id = 2 then
+      decoder path,"nyghq7xksg"
+      put the result into flag_2
+    end if
+    if puzzle_id = 3 then
+      decoder path,"ppyyvn}1{7"
+      put the result into flag_3
+    end if
+  else
+    send opencard to this cd
+  end if
+end checkSolution
+
+
+on updateState i,j
+  global path,cursor_x,cursor_y
+  
+  if (i <> 0) or (j <> 0) then
+    if (cursor_y = j+1) and (cursor_x = i) then
+      put path&"U" into path
+    end if
+    if (cursor_y = j) and (cursor_x = i - 1) then
+      put path&"R" into path
+    end if
+    if (cursor_y = j-1) and (cursor_x = i) then
+      put path&"D" into path
+    end if
+    if (cursor_y = j) and (cursor_x = i + 1) then
+      put path&"L" into path
+    end if
+  end if
+  
+  
+  if cursor_x >= 0 and cursor_y >= 0 then
+    put "h_path_"&min(cursor_x, i)&"_"&min(cursor_y, j) into h_path
+    put "v_path_"&min(cursor_x, i)&"_"&min(cursor_y, j) into v_path
+    
+    if i = cursor_x then
+      send checkYoSelf to button v_path
+    end if
+    
+    if j = cursor_y then
+      send checkYoSelf to button h_path
+    end if
+    
+  end if
+  
+  put i into cursor_x
+  put j into cursor_y
+end updateState
